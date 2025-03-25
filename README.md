@@ -5,13 +5,18 @@ python3 -m venv venv
 source venv/bin/activate
 
 on Windows:
-python -m venv myvenv
+python -m venv venv
+
 on Linux:
-python3 -m venv myvenv
+python3 -m venv venv
+
 Activate the virtual environment:
+
 on Windows:
-myvenv/Scripts/activate
+
+venv/Scripts/activate
+
 on Linux:
-source myvenv/bin/activate
+source venv/bin/activate
 
 pip3 freeze > requirements.txt
