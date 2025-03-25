@@ -9,12 +9,11 @@ class DatabaseManager:
         self.db_name = db_name
 
     def connect(self):
+        """Establish and return a connection to the database."""
         return sqlite3.connect(self.db_name)
 
     def create_tables(self):
-        """
-        Create the necessary database tables if they do not already exist.
-        """
+        """Create necessary database tables if they do not already exist."""
         with self.connect() as conn:
             cursor = conn.cursor()
             cursor.executescript(
@@ -51,20 +50,16 @@ class DatabaseManager:
     def execute_query(
         self, query, params=None, fetch_one=False, fetch_all=False, commit=False
     ):
-        """
-        Execute an SQLite database query safely and raise an exception on failure.
-        """
+        """Execute an SQLite query safely and return results if needed."""
         params = params or ()
         try:
             with self.connect() as conn:
                 cursor = conn.cursor()
                 cursor.execute(query, params)
                 if fetch_one:
-                    result = cursor.fetchone()
-                    return result
+                    return cursor.fetchone()
                 elif fetch_all:
-                    result = cursor.fetchall()
-                    return result
+                    return cursor.fetchall()
                 if commit:
                     conn.commit()
         except sqlite3.Error as err:
@@ -73,6 +68,7 @@ class DatabaseManager:
         return None
 
     def get_all_products(self, page=1, per_page=5):
+        """Retrieve all products from the database with pagination."""
         offset = (page - 1) * per_page
         query_products = """
             SELECT id, title, price, description, image_url 
@@ -106,6 +102,7 @@ class DatabaseManager:
         }
 
     def search_products(self, search_text, selected_categories, page=1, per_page=8):
+        """Search for products by title, description, and category with pagination."""
         offset = (page - 1) * per_page
         query = """
             SELECT p.id, p.title, p.price, p.description, c.name AS category, 
@@ -163,6 +160,7 @@ class DatabaseManager:
         }
 
     def get_cart_items(self, user_id):
+        """Retrieve all items in a user's cart."""
         query = """
             SELECT cart.id, products.title, products.price, products.image_url, products.id
             FROM cart
@@ -183,11 +181,13 @@ class DatabaseManager:
         ]
 
     def is_product_in_cart(self, user_id, product_id):
+        """Check if a specific product is in a user's cart."""
         query = "SELECT COUNT(*) FROM cart WHERE user_id = ? AND product_id = ?"
         result = self.execute_query(query, (user_id, product_id), fetch_one=True)
         return result[0] > 0
 
     def get_products_by_category(self, category_id):
+        """Retrieve all products that belong to a specific category."""
         query = """
             SELECT id, title, price, image_url 
             FROM products 
@@ -201,19 +201,23 @@ class DatabaseManager:
         ]
 
     def add_to_cart(self, user_id, product_id):
+        """Add a product to the user's cart."""
         query = "INSERT INTO cart (user_id, product_id) VALUES (?, ?)"
         self.execute_query(query, (user_id, product_id), commit=True)
 
     def cart_item_exists(self, user_id, product_id):
+        """Check if an item already exists in the cart."""
         query = "SELECT COUNT(*) FROM cart WHERE user_id=? AND product_id=?"
         result = self.execute_query(query, (user_id, product_id), fetch_one=True)
         return result[0] > 0
 
     def remove_from_cart(self, user_id, product_id):
+        """Remove a product from the user's cart."""
         query = "DELETE FROM cart WHERE product_id=? AND user_id=?"
         self.execute_query(query, (product_id, user_id), commit=True)
 
     def create_user(self, username, password):
+        """Create a new user with a hashed password."""
         query = "SELECT COUNT(*) FROM users WHERE username=?"
         result = self.execute_query(query, (username,), fetch_one=True)
 
@@ -225,16 +229,20 @@ class DatabaseManager:
         self.execute_query(query, (username, hashed_password), commit=True)
 
     def get_user(self, username, password):
+        """Retrieve a user by username and verify the password."""
         query = "SELECT id, password FROM users WHERE username=?"
         user = self.execute_query(query, (username,), fetch_one=True)
 
         if user and check_password_hash(user[1], password):
             return {"id": user[0]}
         return None
-
+    
     def add_product(
         self, title, price, description, category_id, seller_id, image_url=None
     ):
+        """
+        Add a new product to the database with the given details.
+        """
         query = """
             INSERT INTO products (title, price, description, category_id, seller_id, image_url)
             VALUES (?, ?, ?, ?, ?, ?)
@@ -247,11 +255,17 @@ class DatabaseManager:
         return result.lastrowid
 
     def get_all_categories(self):
+        """
+        Retrieve all categories from the database.
+        """
         query = "SELECT id, name FROM categories"
         categories = self.execute_query(query, fetch_all=True)
         return [{"id": c[0], "name": c[1]} for c in categories]
 
     def get_product_by_id(self, product_id):
+        """
+        Fetch details of a specific product by its ID.
+        """
         query = """
             SELECT p.id, p.title, p.price, p.description, c.name AS category, p.seller_id, p.image_url, p.category_id
             FROM products p
@@ -275,6 +289,9 @@ class DatabaseManager:
         }
 
     def get_total_cart_items(self, user_id):
+        """
+        Get the total number of items in a user's cart.
+        """
         query = "SELECT COUNT(*) FROM cart WHERE user_id = ?"
         result = self.execute_query(query, (user_id,), fetch_one=True)
         return result[0] if result[0] is not None else 0
