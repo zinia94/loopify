@@ -13,19 +13,10 @@ class DatabaseManager:
     def create_tables(self):
         """
         Create the necessary database tables if they do not already exist.
-        This method establishes a connection to the database and creates the following tables:
-        - `users`: Stores user information, including a unique username and password.
-        - `categories`: Stores product category information with unique names.
-        - `products`: Stores product details, including title, price, stock quantity, description, 
-          category, seller, and an optional image URL. It has foreign key relationships with 
-          `categories` and `users` tables.
-        - `cart`: Stores information about products added to a user's cart, with foreign key 
-          relationships to the `users` and `products` tables.
-        All tables are created only if they do not already exist in the database.
         """
         with self.connect() as conn:
             cursor = conn.cursor()
-            cursor.executescript('''
+            cursor.executescript(''' 
                 CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT UNIQUE NOT NULL,
@@ -53,38 +44,45 @@ class DatabaseManager:
                     product_id INTEGER NOT NULL);
             ''')
             conn.commit()
+            
+    def execute_query(self, query, params=None, fetch_one=False, fetch_all=False, commit=False):
+        """
+        Execute an SQLite database query safely and raise an exception on failure.
+        """
+        params = params or ()
+        try:
+            with self.connect() as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, params)
+                if fetch_one:
+                    result = cursor.fetchone()
+                    return result
+                elif fetch_all:
+                    result = cursor.fetchall()
+                    return result
+                if commit:
+                    conn.commit()
+        except sqlite3.Error as err:
+            raise Exception(f"Database error: {err}")
+        
+        return None
 
     def get_all_products(self, page=1, per_page=5):
-        """
-        Retrieve all products from the database with pagination.
-        Args:
-            page (int): The page number to retrieve.
-            per_page (int): The number of products per page.
-        Returns:
-            dict: A dictionary containing the products and pagination metadata.
-        """
         offset = (page - 1) * per_page
-        with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT id, title, price, description, image_url 
-                FROM products 
-                LIMIT ? OFFSET ?
-            ''', (per_page, offset))
-            products = cursor.fetchall()
+        query_products = '''
+            SELECT id, title, price, description, image_url 
+            FROM products 
+            LIMIT ? OFFSET ?
+        '''
+        products = self.execute_query(query_products, (per_page, offset), fetch_all=True)
 
-            cursor.execute("SELECT COUNT(*) FROM products")
-            total_products = cursor.fetchone()[0]
+        query_count = "SELECT COUNT(*) FROM products"
+        total_products = self.execute_query(query_count, fetch_one=True)[0]
 
         return {
             "products": [
-                {
-                    "id": p[0],
-                    "title": p[1],
-                    "price": p[2],
-                    "description": p[3],
-                    "image_url": p[4]
-                } for p in products
+                {"id": p[0], "title": p[1], "price": p[2], "description": p[3], "image_url": p[4]}
+                for p in products
             ],
             "pagination": {
                 "current_page": page,
@@ -95,62 +93,39 @@ class DatabaseManager:
         }
 
     def search_products(self, search_text, selected_categories, page=1, per_page=8):
-        """
-        Search for products by title, description, and category, with pagination.
-
-        Args:
-            search_text (str): The text to search in product title and description.
-            selected_categories (list): A list of category IDs to filter by.
-            page (int): The page number.
-            per_page (int): The number of products per page.
-
-        Returns:
-            dict: A dictionary containing the products and pagination metadata.
-        """
         offset = (page - 1) * per_page
-        query = '''SELECT p.id, p.title, p.price, p.description, c.name AS category, p.seller_id, p.image_url, p.category_id
-                   FROM products p
-                   JOIN categories c ON p.category_id = c.id
-                   WHERE (p.title LIKE ? OR p.description LIKE ?)'''
-
+        query = '''
+            SELECT p.id, p.title, p.price, p.description, c.name AS category, 
+                   p.seller_id, p.image_url, p.category_id
+            FROM products p
+            JOIN categories c ON p.category_id = c.id
+            WHERE (p.title LIKE ? OR p.description LIKE ?)
+        '''
         params = [f'%{search_text}%', f'%{search_text}%']
-
         if selected_categories:
             query += " AND p.category_id IN ({})".format(','.join(['?'] * len(selected_categories)))
             params.extend(selected_categories)
-
         query += " LIMIT ? OFFSET ?"
         params.extend([per_page, offset])
 
-        with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute(query, params)
-            products = cursor.fetchall()
+        products = self.execute_query(query, params, fetch_all=True)
 
-            cursor.execute("SELECT COUNT(*) FROM products WHERE (title LIKE ? OR description LIKE ?)", (f'%{search_text}%', f'%{search_text}%'))
-            total_products = cursor.fetchone()[0]
+        count_query = '''
+            SELECT COUNT(*) FROM products 
+            WHERE (title LIKE ? OR description LIKE ?)
+        '''
+        count_params = [f'%{search_text}%', f'%{search_text}%']
+        if selected_categories:
+            count_query += " AND category_id IN ({})".format(','.join(['?'] * len(selected_categories)))
+            count_params.extend(selected_categories)
 
-            if selected_categories:
-                cursor.execute(
-                    "SELECT COUNT(*) FROM products WHERE (title LIKE ? OR description LIKE ?) AND category_id IN ({})".format(
-                        ','.join(['?'] * len(selected_categories))
-                    ),
-                    [f'%{search_text}%', f'%{search_text}%'] + selected_categories
-                )
-                total_products = cursor.fetchone()[0]
+        total_products = self.execute_query(count_query, count_params, fetch_one=True)[0]
 
         return {
             "products": [
-                {
-                    "id": p[0],
-                    "title": p[1],
-                    "price": p[2],
-                    "description": p[3],
-                    "category": p[4],
-                    "seller_id": p[5],
-                    "image_url": p[6],
-                    "category_id": p[7]
-                } for p in products
+                {"id": p[0], "title": p[1], "price": p[2], "description": p[3], "category": p[4], 
+                 "seller_id": p[5], "image_url": p[6], "category_id": p[7]}
+                for p in products
             ],
             "pagination": {
                 "current_page": page,
@@ -160,155 +135,102 @@ class DatabaseManager:
             }
         }
 
-
-    def get_recommendations(self, product_id):
-        """Get recommended products based on the same category."""
-        with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT category_id FROM products WHERE id=?", (product_id,))
-            category = cursor.fetchone()
-
-            if category:
-                cursor.execute("SELECT id, title, price, image_url FROM products WHERE category_id=? AND id!=?", (category[0], product_id))
-                recommendations = cursor.fetchall()
-            else:
-                recommendations = []
-
-        return [{'id': p[0], 'title': p[1], 'price': p[2], 'image_url': p[3]} for p in recommendations]
-
     def get_cart_items(self, user_id):
-        """Retrieve all items in the cart for a specific user."""
-        with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT cart.id, products.title, products.price, products.image_url ,products.id
-                FROM cart 
-                JOIN products ON cart.product_id = products.id
-                WHERE cart.user_id = ?
-            ''', (user_id,))
-            cart_items = cursor.fetchall()
-        return [{'id': item[0], 'title': item[1], 'price': item[2], 'image_url': item[3], 'product_id': item[4]} for item in cart_items]
-    
+        query = '''
+            SELECT cart.id, products.title, products.price, products.image_url, products.id
+            FROM cart
+            JOIN products ON cart.product_id = products.id
+            WHERE cart.user_id = ?
+        '''
+        result = self.execute_query(query, (user_id,), fetch_all=True)
+
+        return [{
+            'id': item[0], 
+            'title': item[1], 
+            'price': item[2], 
+            'image_url': item[3], 
+            'product_id': item[4]
+        } for item in result]
+
+    def is_product_in_cart(self, user_id, product_id):
+        query = "SELECT COUNT(*) FROM cart WHERE user_id = ? AND product_id = ?"
+        result = self.execute_query(query, (user_id, product_id), fetch_one=True)
+        return result[0] > 0
+
     def get_products_by_category(self, category_id):
-        """Get all products by category."""
-        with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT id, title, price, image_url 
-                FROM products 
-                WHERE category_id = ?
-            ''', (category_id,))
-            products = cursor.fetchall()
+        query = '''
+            SELECT id, title, price, image_url 
+            FROM products 
+            WHERE category_id = ?
+        '''
+        result = self.execute_query(query, (category_id,), fetch_all=True)
 
-        return [{'id': p[0], 'title': p[1], 'price': p[2], 'image_url': p[3]} for p in products]
-
+        return [{'id': p[0], 'title': p[1], 'price': p[2], 'image_url': p[3]} for p in result]
 
     def add_to_cart(self, user_id, product_id):
-        """Add a product to the cart."""
-        with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute("INSERT INTO cart (user_id, product_id) VALUES (?, ?)", (user_id, product_id))
-            conn.commit()
-            
+        query = "INSERT INTO cart (user_id, product_id) VALUES (?, ?)"
+        self.execute_query(query, (user_id, product_id), commit=True)
+    
     def cart_item_exists(self, user_id, product_id):
-        """Check if a product is already in the cart for a specific user."""
-        with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT COUNT(*) FROM cart WHERE user_id=? AND product_id=?", (user_id, product_id))
-            count = cursor.fetchone()[0]
-        return count > 0
+        query = "SELECT COUNT(*) FROM cart WHERE user_id=? AND product_id=?"
+        result = self.execute_query(query, (user_id, product_id), fetch_one=True)
+        return result[0] > 0
     
     def remove_from_cart(self, user_id, product_id):
-        """Remove a product from the cart if it belongs to the user."""
-        with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM cart WHERE product_id=? AND user_id=?", (product_id, user_id))
-            conn.commit()
-
+        query = "DELETE FROM cart WHERE product_id=? AND user_id=?"
+        self.execute_query(query, (product_id, user_id), commit=True)
+    
     def create_user(self, username, password):
-        """Insert a new user with hashed password if the username does not already exist."""
-        with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT COUNT(*) FROM users WHERE username=?", (username,))
-            if cursor.fetchone()[0] > 0:
-                raise ValueError("Username already exists.")
-            
-            hashed_password = generate_password_hash(password)
-            cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed_password))
-            conn.commit()
-
+        query = "SELECT COUNT(*) FROM users WHERE username=?"
+        result = self.execute_query(query, (username,), fetch_one=True)
+        
+        if result[0] > 0:
+            raise ValueError("Username already exists.")
+        
+        hashed_password = generate_password_hash(password)
+        query = "INSERT INTO users (username, password) VALUES (?, ?)"
+        self.execute_query(query, (username, hashed_password), commit=True)
+    
     def get_user(self, username, password):
-        """Retrieve user details and validate password securely."""
-        with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT id, password FROM users WHERE username=?", (username,))
-            user = cursor.fetchone()
-
+        query = "SELECT id, password FROM users WHERE username=?"
+        user = self.execute_query(query, (username,), fetch_one=True)
+        
         if user and check_password_hash(user[1], password):
             return {"id": user[0]}
         return None
     
     def add_product(self, title, price, description, category_id, seller_id, image_url=None):
-        """
-        Add a new product to the database and return its ID.
-        Args:
-            title (str): The title of the product.
-            price (float): The price of the product.
-            description (str): The description of the product.
-            category_id (int): The ID of the category the product belongs to.
-            seller_id (int): The ID of the seller adding the product.
-            image_url (str, optional): The URL of the product image.
-        Returns:
-            int: The ID of the newly added product.
-        """
-        with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                INSERT INTO products (title, price, description, category_id, seller_id, image_url)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ''', (title, price, description, category_id, seller_id, image_url))
-            conn.commit()
-            return cursor.lastrowid
-            
+        query = '''
+            INSERT INTO products (title, price, description, category_id, seller_id, image_url)
+            VALUES (?, ?, ?, ?, ?, ?)
+        '''
+        result = self.execute_query(query, (title, price, description, category_id, seller_id, image_url), commit=True)
+        return result.lastrowid
+    
     def get_all_categories(self):
-        """
-        Retrieve all categories from the database.
-        Returns:
-            list: A list of dictionaries containing category details.
-        """
-        with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT id, name FROM categories")
-            categories = cursor.fetchall()
+        query = "SELECT id, name FROM categories"
+        categories = self.execute_query(query, fetch_all=True)
         return [{"id": c[0], "name": c[1]} for c in categories]
-
+    
     def get_product_by_id(self, product_id):
-        """
-        Retrieve a product by its ID, including the category name instead of the category ID.
-        Args:
-            product_id (int): The ID of the product to retrieve.
-        Returns:
-            dict: A dictionary containing the product details, or None if the product does not exist.
-        """
-        with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT p.id, p.title, p.price,  p.description, c.name AS category, p.seller_id, p.image_url, p.category_id
-                FROM products p
-                JOIN categories c ON p.category_id = c.id
-                WHERE p.id = ?
-            ''', (product_id,))
-            product = cursor.fetchone()
+        query = '''
+            SELECT p.id, p.title, p.price, p.description, c.name AS category, p.seller_id, p.image_url, p.category_id
+            FROM products p
+            JOIN categories c ON p.category_id = c.id
+            WHERE p.id = ?
+        '''
+        product = self.execute_query(query, (product_id,), fetch_one=True)
+        
+        if(product is None):
+            return None
 
-        if product:
-            return {
-                "id": product[0],
-                "title": product[1],
-                "price": product[2],
-                "description": product[3],
-                "category": product[4],
-                "seller_id": product[5],
-                "image_url": product[6],
-                "category_id": product[7]
-            }
-        return None
+        return {
+            "id": product[0],
+            "title": product[1],
+            "price": product[2],
+            "description": product[3],
+            "category": product[4],
+            "seller_id": product[5],
+            "image_url": product[6],
+            "category_id": product[7]
+        }

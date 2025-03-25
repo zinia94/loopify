@@ -21,6 +21,12 @@ def get_userinfo_from_session():
     """Helper function to get userinfo from session."""
     return UserInfo(session.get('user_id'), session.get('username'))
 
+def render_error_page(error_message, errorcode = 500, error_template = '500.html'):
+    """Render an error page with the given error message."""
+    session.clear()  # Clear the session to log out the user
+    userinfo = get_userinfo_from_session()
+    return render_template(error_template, userinfo=userinfo, error_message = error_message), errorcode
+
 @app.route('/')
 def home():
     try:
@@ -28,7 +34,7 @@ def home():
         response = db.get_all_products(page=1, per_page= 4)
         return render_template('index.html', products=response["products"], userinfo=userinfo)
     except Exception as e:
-        return jsonify({'error': str(e)})
+        return render_error_page(e)
 
     
 @app.route('/contact', methods=['GET'])
@@ -63,19 +69,24 @@ def add_product():
             product_id = db.add_product(title=title, description=description, price=price, category_id=category_id, seller_id=userinfo.user_id, image_url=image_url)
             return redirect(url_for('view_product', product_id=product_id))  # Redirect to product page after adding the product
         except Exception as e:
-            return jsonify({'error': str(e)})
+            render_error_page(e)
     try:
         categories = db.get_all_categories()  # Fetch all categories from the database
         return render_template('add_product.html', categories=categories, userinfo = userinfo)  # Pass categories to the template
     except Exception as e:
-        return jsonify({'error': str(e)})
+        return render_error_page(e)
 
 @app.route('/product/<int:product_id>')
 def view_product(product_id):
     try:
         product = db.get_product_by_id(product_id)  # Fetch product details by ID
-        if not product:
-            return jsonify({'error': 'Product not found'}), 404
+
+        if product is None:
+            return render_error_page('Product not found', 404, '404.html')  # Return 404 error if product not found
+       
+        userinfo = get_userinfo_from_session()  # Use helper function
+        
+        added_to_cart = db.is_product_in_cart(userinfo.user_id, product_id)
 
         # Fetch all products from the same category
         all_products_in_category = db.get_products_by_category(product['category_id'])
@@ -84,12 +95,11 @@ def view_product(product_id):
         recommended_products = [
             p for p in all_products_in_category if p['id'] != product_id
         ]
-
-        userinfo = get_userinfo_from_session()  # Use helper function
-        return render_template('view_product.html', product=product, recommended_products=recommended_products, userinfo=userinfo)
+        return render_template('view_product.html', product=product, recommended_products=recommended_products, added_to_cart= added_to_cart, userinfo=userinfo)
 
     except Exception as e:
-        return jsonify({'error': str(e)})
+        
+        return render_error_page(e)
 
 @app.route('/search_results', methods=['GET', 'POST'])
 def search_results():
@@ -134,7 +144,7 @@ def search_results():
                                categories=categories,
                                pagination=pagination)
     except Exception as e:
-        return jsonify({'error': str(e)})
+        return render_error_page(e)
 
 
 
@@ -147,7 +157,7 @@ def cart():
         total_price = sum(item['price'] for item in cart_items)  # Calculate total price
         return render_template('cart.html', cart_items=cart_items, total_price=total_price, userinfo=userinfo)
     except Exception as e:
-        return jsonify({'error': str(e)})
+        return render_error_page(e)
 
 @app.route('/cart/add/<int:product_id>', methods=['GET', 'POST'])
 def add_to_cart(product_id):
@@ -159,7 +169,7 @@ def add_to_cart(product_id):
         db.add_to_cart(userinfo.user_id, product_id)
         return redirect(url_for('cart'))
     except Exception as e:
-        return jsonify({'error': str(e)})
+        return render_error_page(e)
 
 @app.route('/cart/remove/<int:product_id>', methods=['POST'])
 def remove_from_cart(product_id):
@@ -169,12 +179,12 @@ def remove_from_cart(product_id):
 
     try:
         if not db.cart_item_exists(userinfo.user_id, product_id):  # Check if the cart item exists and belongs to the user
-            return jsonify({'error': 'Cart item not found or unauthorized access'}), 404
+            return render_error_page('Cart item not found or unauthorized access', 404, '404.html')
 
         db.remove_from_cart(userinfo.user_id, product_id)
         return redirect(url_for('cart'))
     except Exception as e:
-        return jsonify({'error': str(e)})  # Return error message in case of an exception
+        return render_error_page(e)  # Return error message in case of an exception
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -190,7 +200,7 @@ def login():
             else:
                 flash('Wrong username or password', 'error')
         except Exception as e:
-            return jsonify({'error': str(e)})
+            return render_error_page(e)
 
     return render_template('login.html')
 
@@ -203,7 +213,7 @@ def register():
             db.create_user(username, password)  # Create a new user in the database
             return redirect(url_for('login'))  # Redirect to login page after successful registration
         except Exception as e:
-            return jsonify({'error': str(e)})
+            return render_error_page(e)
     return render_template('register.html')
 
 @app.route('/logout')

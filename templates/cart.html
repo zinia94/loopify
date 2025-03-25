@@ -51,7 +51,7 @@
             </div>
 
         {% else %}
-            <p class="empty-cart">Your cart is empty. <a href="{{ url_for('home') }}">Start shopping</a>!</p>
+            <p class="empty-cart">Your cart is empty. <a href="{{ url_for('search_results') }}">Start shopping</a>!</p>
         {% endif %}
     {% else %}
         <p class="empty-cart">You need to <a href="{{ url_for('login') }}">log in</a> first to view your cart.</p>
