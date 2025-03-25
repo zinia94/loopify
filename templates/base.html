@@ -8,17 +8,15 @@
     <link rel="stylesheet" href="/static/css/main.css"> 
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"/>
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 
-    <!-- Bootstrap JS (for collapsible filters) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     {% block styles %}{% endblock %}
+
 </head>
-<body>
-    <!-- Header Section -->
+<body onload="document.body.style.opacity='1'">
     <header>
         <div class="header-container">
             <div style="display: flex; align-items: center;">
@@ -30,32 +28,33 @@
             <div class="auth-section">
                 {% if userinfo.user_id %}
                 <div class="dropdown" style="position: relative;">
-                    <!-- Profile Icon and Username -->
                     <div style="display: flex; align-items: center; cursor: pointer;">
                         <img src="{{ url_for('static', filename='images/profile-icon.png') }}" alt="Profile" class="profile-icon"
                              style="border-radius: 50%; width: 40px; height: 40px; object-fit: cover; border: 2px solid #27bb30; padding: 2px;">
                         <span onclick="toggleDropdown()" style="margin-left: 12px; color: #27bb30; font-weight: bold; font-size: 1.1rem; cursor: pointer; display: inline-block;"
                               onmouseover="this.style.color='#1e8f24'" onmouseout="this.style.color='#27bb30'">{{ userinfo.username }}</span>
                     </div>
-                
-                    <!-- Dropdown Menu -->
+
                     <ul class="dropdown-content" id="dropdownMenu" style="display: none; position: absolute; top: 50px; right: 0; background-color: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); z-index: 1000; width: 200px;">
-                        <li style="border-bottom: 1px solid #ddd; padding: 10px;">
-                            <a href="{{ url_for('cart') }}" style="text-decoration: none; color: #333; display: block; font-size: 1rem; padding: 8px 15px; border-radius: 5px;"
-                               onmouseover="this.style.backgroundColor='#f0f0f0';" onmouseout="this.style.backgroundColor='transparent';">View Cart</a>
-                        </li>
-                        <li style="border-bottom: 1px solid #ddd; padding: 10px;">
-                            <a href="{{ url_for('add_product') }}" style="text-decoration: none; color: #333; display: block; font-size: 1rem; padding: 8px 15px; border-radius: 5px;"
-                               onmouseover="this.style.backgroundColor='#f0f0f0';" onmouseout="this.style.backgroundColor='transparent';">Sell a New Product</a>
-                        </li>
-                        <li style="padding: 10px;">
-                            <a href="{{ url_for('logout') }}" style="text-decoration: none; color: #333; display: block; font-size: 1rem; padding: 8px 15px; border-radius: 5px;"
-                               onmouseover="this.style.backgroundColor='#f0f0f0';" onmouseout="this.style.backgroundColor='transparent';">Logout</a>
-                        </li>
+                        <a href="{{ url_for('cart') }}">
+                            <li style="border-bottom: 1px solid #ddd; padding: 10px;">
+                                View Cart
+                            </li>
+                        </a>
+
+                        <a href="{{ url_for('add_product') }}">
+                            <li style="border-bottom: 1px solid #ddd; padding: 10px;">
+                                Sell a New Product
+                            </li>
+                        </a>
+                        <a href="{{ url_for('logout') }}">
+                            <li style="padding: 10px;">
+                                Logout
+                            </li>
+                        </a>
                     </ul>
                 </div>
                 
-                <!-- JavaScript to toggle the dropdown -->
                 <script>
                     function toggleDropdown() {
                         var menu = document.getElementById("dropdownMenu");
@@ -69,18 +68,27 @@
         </div>
     </header>
 
-    <!-- Main Content -->
     <main style="min-height: calc(100vh - 90px - 65px);">
         {% block content %}
         {% endblock %}
     </main>
 
-    <!-- Footer Section -->
+    {% if userinfo and userinfo.user_id %}
+        <a href="{{ url_for('cart') }}">
+            <div class="floating-cart">
+                <i class="fa fa-shopping-cart"></i>
+                <span class="cart-badge">{{ userinfo.total_cart_items or 0 }}</span>
+            </div>
+        </a>
+    {% endif %}
+
     <footer>
         <div class="footer-container">
             <p>&copy; 2025 Loopify. All rights reserved.</p>
             <p>Privacy Policy | Terms of Service | <a href="/contact">Contact Me</a></p>
         </div>
     </footer>
+
+
 </body>
 </html>
