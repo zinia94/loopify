@@ -24,6 +24,10 @@ h2 {
     border-radius: 8px;
     margin-bottom: 20px;
     overflow: hidden;
+    font-size: 14px;
+}
+table.table-striped.cart-table td {
+    vertical-align: middle !important;
 }
 
 .table th {
@@ -113,4 +117,10 @@ h2 {
 
 .text-center {
     text-align: center;
+}
+
+.cart-actions {
+    display: flex;
+    justify-content: center;
+    gap: 16px; /* Adjust the value for more or less space */
 }

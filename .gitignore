@@ -1,2 +1,7 @@
 __pycache__/
 venv/
+*/__pycache__/
+*/*/__pycache__/
+*/*/*/__pycache__/
+app/static/images/uploads/*
+instance/*

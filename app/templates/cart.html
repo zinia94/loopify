@@ -25,14 +25,14 @@
                             <img class="cart-image" src="{{ item.image_url }}" alt="{{ item.title }}">
                         </td>
                         <td>
-                            <a href="{{ url_for('view_product', product_id=item.product_id) }}" class="cart-item-link">
+                            <a href="{{ url_for('product.view_product', product_id=item.product_id) }}" class="cart-item-link">
                                 {{ item.title }}
                             </a>
                         </td>
                         <td class="cart-price">${{ item.price }}</td>
                         <td class="cart-subtotal">${{ item.price }}</td>
                         <td>
-                            <form action="{{ url_for('remove_from_cart', product_id=item.product_id) }}" method="POST">
+                            <form action="{{ url_for('cart.remove_from_cart', product_id=item.product_id) }}" method="POST">
                                 <button type="submit" class="btn btn-danger btn-sm"><i class="fa fa-trash-o" aria-hidden="true" style="font-size: 15px;"></i> Remove</button>
                             </form>
                         </td>
@@ -46,15 +46,15 @@
             </div>
 
             <div class="cart-actions text-center mt-4">
-                <a href="{{ url_for('search_results') }}" class="btn btn-outline-primary cart-btn">Continue Shopping</a>
+                <a href="{{ url_for('product.search_results') }}" class="btn btn-outline-primary cart-btn">Continue Shopping</a>
                 <a href="#" class="btn btn-success cart-btn">Proceed to Checkout</a>
             </div>
 
         {% else %}
-            <p class="empty-cart-message">Your cart is empty. <a href="{{ url_for('search_results') }}" class="start-shopping-link">Start shopping</a>!</p>
+            <p class="empty-cart-message">Your cart is empty. <a href="{{ url_for('product.search_results') }}" class="start-shopping-link">Start shopping</a>!</p>
         {% endif %}
     {% else %}
-        <p class="empty-cart-message">You need to <a href="{{ url_for('login') }}" class="login-link">log in</a> first to view your cart.</p>
+        <p class="empty-cart-message">You need to <a href="{{ url_for('auth.login') }}" class="login-link">log in</a> first to view your cart.</p>
     {% endif %}
 </div>
 {% endblock %}

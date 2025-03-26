@@ -25,3 +25,5 @@ pip3 freeze > requirements.txt
 pip3 install -r requirements.txt
 
 python3 app.py
+
+pytest tests/test_helpers.py
