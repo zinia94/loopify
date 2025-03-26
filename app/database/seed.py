@@ -1,12 +1,14 @@
 from app.database.db import db
 
+
 def insert_test_users():
     from app.models.user import User
+
     """Insert at least 3 test users with hashed passwords if they do not already exist."""
     test_users = [
         ("testuser1", "password1"),
         ("testuser2", "password2"),
-        ("testuser3", "password3")
+        ("testuser3", "password3"),
     ]
 
     for username, password in test_users:
@@ -22,6 +24,7 @@ def insert_test_users():
 
 def insert_categories():
     from app.models.category import Category
+
     """Insert predefined categories if they do not already exist."""
     categories = [
         "Electronics",
@@ -31,7 +34,7 @@ def insert_categories():
         "Books",
         "Toys",
         "Sports",
-        "Beauty & Personal Care"
+        "Beauty & Personal Care",
     ]
 
     for category_name in categories:
@@ -45,6 +48,7 @@ def insert_categories():
 
 def insert_sample_products():
     from app.models.product import Product
+
     """Insert a list of sample used products into the database with seller_id always 2 or 3."""
     sample_products = [
         (
@@ -142,7 +146,7 @@ def insert_sample_products():
             35.00,
             "EUR",
             "Refresh your wardrobe with this chic pre-owned mini dress. Crafted from soft, breathable fabric, it features a flattering fit and stylish design. Perfect for casual outings, date nights, or summer events. Its lightweight feel and modern cut make it a versatile go-to piece for any occasion — all at a budget-friendly price.",
-            3,  
+            3,
             1,
             "/static/images/samples/mini_dress.webp",
         ),
@@ -151,7 +155,7 @@ def insert_sample_products():
             12.00,
             "EUR",
             "This ceramic coffee mug is perfect for enjoying your favorite drinks. It has a classic design with a comfortable handle and is made from durable ceramic. It's gently used but still in great condition and ideal for everyday use. A great way to add a bit of style to your morning routine without spending too much.",
-            4,  
+            4,
             1,
             "/static/images/samples/coffee_mug.webp",
         ),
@@ -160,13 +164,21 @@ def insert_sample_products():
             25.00,
             "EUR",
             "This non-stick frying pan is perfect for cooking all your favorite meals. It heats evenly and is easy to clean thanks to its non-stick surface. Though gently used, it's still in great shape and works well for frying, sautéing, and more. A great deal for a high-quality kitchen essential.",
-            4,  
-            1,  
+            4,
+            1,
             "/static/images/samples/frying_pan.webp",
         ),
     ]
 
-    for title, price, currency, description, category_id, seller_id, image_url in sample_products:
+    for (
+        title,
+        price,
+        currency,
+        description,
+        category_id,
+        seller_id,
+        image_url,
+    ) in sample_products:
         existing_product = Product.query.filter_by(title=title).first()
         if not existing_product:
             new_product = Product(
@@ -176,7 +188,7 @@ def insert_sample_products():
                 description=description,
                 category_id=category_id,
                 seller_id=seller_id,
-                image_url=image_url
+                image_url=image_url,
             )
             db.session.add(new_product)
 
@@ -189,8 +201,9 @@ def insert_db_samples():
         insert_categories()
         insert_sample_products()
     except Exception as e:
-        db.session.rollback() 
+        db.session.rollback()
         print(f"An unexpected error occurred: {e}")
+
 
 if __name__ == "__main__":
     insert_db_samples()

@@ -3,7 +3,8 @@ from app.utils.helpers import get_userinfo_from_session, render_error_page
 import logging
 
 
-general_bp = Blueprint('general', __name__)
+general_bp = Blueprint("general", __name__)
+
 
 @general_bp.route("/")
 def home():
@@ -19,6 +20,7 @@ def home():
         logging.error(e)
         return render_error_page(e)
 
+
 @general_bp.route("/contact")
 def contact():
     """
@@ -26,4 +28,3 @@ def contact():
     """
     userinfo = get_userinfo_from_session()
     return render_template("contact.html", userinfo=userinfo)
-

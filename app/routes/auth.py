@@ -1,8 +1,19 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    flash,
+    current_app,
+)
 from app.utils.helpers import render_error_page
+from flask_login import login_user, logout_user
 import logging
 
-auth_bp = Blueprint('auth', __name__)
+auth_bp = Blueprint("auth", __name__)
+
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
@@ -10,6 +21,11 @@ def login():
     User login page.
     Handles login form submission and redirects to the homepage on success.
     """
+    next_page = request.args.get("next") or request.form.get("next")
+    logging.debug("here zinia")
+    logging.debug(next_page)
+    print("here zinia")
+    print(next_page)
     if request.method == "POST":
         try:
             db = current_app.db
@@ -17,16 +33,20 @@ def login():
             password = request.form["password"]
             user = db.get_user(username, password)
             if user:
-                session["user_id"] = user.id
-                session["username"] = user.username
                 session["total_cart_items"] = db.get_total_cart_items(user.id)
-                return redirect(url_for("general.home"))
+                login_user(user)
+                if next_page:
+                    logging.debug(next_page)
+                    return redirect(next_page)
+                else:
+                    return redirect(next_page or url_for("general.home"))
             else:
-                flash("Invalid username or password", "error")
+                flash("Invalid username or password", "danger")
         except Exception as e:
             logging.error(e)
             return render_error_page(e)
-    return render_template("login.html")
+    return render_template("auth.html", is_login=True)
+
 
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
@@ -39,11 +59,25 @@ def register():
             db = current_app.db
             username = request.form["username"]
             password = request.form["password"]
+
+            # Check if the username already exists in the database
+            existing_user = db.get_user_by_username(username)
+
+            if existing_user:
+                flash(
+                    "Username already exists. Please choose a different one.", "danger"
+                )
+                return redirect(url_for("auth.register"))
+
             db.create_user(username, password)
+            flash("Registration successful! Please log in.", "success")
             return redirect(url_for("auth.login"))
+
         except Exception as e:
             return render_error_page(e)
-    return render_template("register.html")
+
+    return render_template("auth.html", is_login=False)
+
 
 @auth_bp.route("/logout")
 def logout():
@@ -51,4 +85,5 @@ def logout():
     Logs out the user and clears session data.
     """
     session.clear()
+    logout_user()
     return redirect(url_for("general.home"))

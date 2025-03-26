@@ -67,6 +67,15 @@
             </div>
         </div>
     </header>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+       {% if messages %}
+           <div class="alert alert-{{ category }}">
+               {% for category, message in messages %}
+                   <p>{{ message }}</p>
+               {% endfor %}
+           </div>
+       {% endif %}
+    {% endwith %}
 
     <main style="min-height: calc(100vh - 90px - 65px);">
         {% block content %}

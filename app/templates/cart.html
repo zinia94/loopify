@@ -54,7 +54,7 @@
             <p class="empty-cart-message">Your cart is empty. <a href="{{ url_for('product.search_results') }}" class="start-shopping-link">Start shopping</a>!</p>
         {% endif %}
     {% else %}
-        <p class="empty-cart-message">You need to <a href="{{ url_for('auth.login') }}" class="login-link">log in</a> first to view your cart.</p>
+        <p class="empty-cart-message">You need to <a href="{{ url_for('auth.login', next = '/cart') }}" class="login-link">log in</a> first to view your cart.</p>
     {% endif %}
 </div>
 {% endblock %}
