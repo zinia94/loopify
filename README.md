@@ -31,7 +31,7 @@ Loopify is an online marketplace designed to help users buy and sell used items,
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/loopify.git
+git clone https://github.com/zinia94/loopify.git
 cd loopify
 ```
 
