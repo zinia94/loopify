@@ -13,7 +13,6 @@ from app.utils import (
     load_next_page,
 )
 from flask_login import login_required, current_user
-import logging
 
 product_bp = Blueprint("product", __name__)
 
@@ -28,7 +27,7 @@ def view_product(product_id):
         product = db.get_product_by_id(product_id)
         if not product:
             return render_error_page("Product not found", 404)
-        
+
         if current_user.is_authenticated:
             added_to_cart = db.cart_item_exists(current_user.id, product_id)
         else:
@@ -46,7 +45,6 @@ def view_product(product_id):
             added_to_cart=added_to_cart,
         )
     except Exception as e:
-        logging.error(e)
         return render_error_page(e)
 
 
@@ -79,11 +77,9 @@ def add_product():
             flash("Product added successfully!", "success")
             return redirect(url_for("product.view_product", product_id=product.id))
         except Exception as e:
-            logging.error(e)
             return render_error_page(e)
     try:
         categories = db.get_all_categories()
-        logging.debug(categories)
         return render_template(
             "manage_product.html",
             categories=categories,
@@ -127,7 +123,6 @@ def update_product(product_id):
             flash("Product updated successfully!", "success")
             return redirect(url_for("product.view_product", product_id=product.id))
         except Exception as e:
-            logging.error(e)
             return render_error_page(e)
 
     categories = db.get_all_categories()
@@ -157,7 +152,6 @@ def delete_product(product_id):
         flash("Product deleted successfully.", "success")
         return load_next_page(request)
     except Exception as e:
-        logging.error(f"Error deleting product: {e}")
         return render_error_page("There was an error deleting the product.")
 
 
@@ -185,7 +179,6 @@ def search_results():
             selected_categories=selected_categories,
         )
     except Exception as e:
-        logging.error(e)
         return render_error_page(e)
 
 

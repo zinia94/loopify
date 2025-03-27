@@ -10,7 +10,6 @@ from flask import (
 )
 from app.utils.helpers import render_error_page, load_next_page
 from flask_login import login_user, logout_user, login_required
-import logging
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -34,7 +33,6 @@ def login():
             else:
                 flash("Invalid username or password", "danger")
         except Exception as e:
-            logging.error(e)
             return render_error_page(e)
     return render_template("auth.html", is_login=True)
 

@@ -9,7 +9,6 @@ from flask import (
 )
 from app.utils import render_error_page
 from flask_login import login_required, current_user
-import logging
 
 cart_bp = Blueprint("cart", __name__)
 
@@ -23,12 +22,8 @@ def cart():
     try:
         db = current_app.db
         cart_items = db.get_cart_items(current_user.id)
-        total_price = sum(item["price"] for item in cart_items)
-        return render_template(
-            "cart.html", cart_items=cart_items, total_price=total_price
-        )
+        return render_template("cart.html", cart_items=cart_items)
     except Exception as e:
-        logging.error(e)
         return render_error_page(e)
 
 

@@ -2,6 +2,9 @@
 {% block styles %}
     <link rel="stylesheet" href="/static/css/table.css">
 {% endblock %}
+{% block scripts %}
+    <script src="/static/js/cart.js"></script>
+{% endblock %}
 
 {% block content %}
 <div class="container cart-container">
@@ -41,7 +44,7 @@
             </table>
 
             <div class="total-price-container">
-                <span class="total-price">Total Price: ${{ total_price }}</span>
+                <span class="total-price">0</span>
             </div>
 
             <div class="cart-actions text-center mt-4">
