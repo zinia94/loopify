@@ -82,6 +82,7 @@ class DatabaseManager:
 
     def delete_product(self, product_id):
         from app.models import Product, Cart
+
         try:
             product = Product.query.get(product_id)
             if product:
@@ -99,12 +100,13 @@ class DatabaseManager:
         from app.models import Product
 
         return Product.query.get(product_id)
-    
+
     def get_products_by_seller_id(self, seller_id):
         """
         Get all products by a specific seller ID.
         """
         from app.models import Product
+
         return Product.query.filter_by(seller_id=seller_id).all()
 
     def get_all_categories(self):

@@ -28,6 +28,7 @@ def render_error_page(error_message, errorcode=500):
         errorcode,
     )
 
+
 def load_next_page(request):
     next_page = request.args.get("next") or request.form.get("next")
     if next_page:

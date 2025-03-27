@@ -7,7 +7,12 @@ from flask import (
     redirect,
     flash,
 )
-from app.utils import get_userinfo_from_session, render_error_page, save_image, load_next_page
+from app.utils import (
+    get_userinfo_from_session,
+    render_error_page,
+    save_image,
+    load_next_page,
+)
 from flask_login import login_required
 import logging
 
@@ -200,7 +205,9 @@ def my_products():
         db = current_app.db
         userinfo = get_userinfo_from_session()
         products = db.get_products_by_seller_id(userinfo.user_id)
-        return render_template("users_products.html", products=products, userinfo = userinfo)
+        return render_template(
+            "users_products.html", products=products, userinfo=userinfo
+        )
     except Exception as e:
         flash(f"Error loading products", "danger")
         return redirect(url_for("general.home"))
