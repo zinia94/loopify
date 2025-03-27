@@ -76,7 +76,7 @@ test_users = [
 
 These test users can be used to log in and verify application functionality.
 
-### Running Tests
+### 5. Running Tests
 
 To run the tests, use pytest:
 ```bash
