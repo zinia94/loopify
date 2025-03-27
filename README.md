@@ -64,6 +64,18 @@ python run.py
 ```
 The app will be running at http://127.0.0.1:5000/ by default.
 
+For testing purposes, the following test user accounts can be used:
+
+```bash
+test_users = [
+    ("testuser1", "password1"),
+    ("testuser2", "password2"),
+    ("testuser3", "password3"),
+]
+```
+
+These test users can be used to log in and verify application functionality.
+
 ### Running Tests
 
 To run the tests, use pytest:
