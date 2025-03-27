@@ -32,7 +32,10 @@
                         <td class="generic-price">€{{ product.price }}</td>
                         <td>
                             <a href="{{ url_for('product.update_product', product_id=product.id) }}" class="btn btn-warning btn-sm">Edit</a>
-                            <a href="{{ url_for('product.delete_product', product_id=product.id, next=request.url) }}" class="btn btn-danger btn-sm">Delete</a>
+                            <form action="{{ url_for('product.delete_product', product_id=product.id) }}" method="get" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                                <input type="hidden" name="next" value="{{ request.url }}">
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
                         </td>
                     </tr>
                     {% endfor %}
