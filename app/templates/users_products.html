@@ -7,7 +7,7 @@
 <div class="container product-container">
     <h2 class="page-title">Your Products</h2>
 
-    {% if userinfo.user_id %}
+    {% if user.is_authenticated %}
         {% if products %}
             <table class="table table-striped generic-table">
                 <thead>

@@ -19,39 +19,39 @@
 
                 <div class="d-flex align-items-center mb-3">
                     <p class="h4 text-success mb-0" style="font-weight: bold; margin-right: 15px; font-size: 1.5rem; ">Price: €{{ product.price }}</p>
-                        {% if userinfo.user_id == product.seller_id %}
-                        <form method="get" action="{{ url_for('product.update_product', product_id=product.id) }}" class="ml-3" style = "margin-right: 10px;">
-                            <button type="submit" class="btn btn-primary" style="padding: 0.6rem 1.8rem; font-size: 1.1rem; font-weight: bold; border-radius: 5px; border: none; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); color: white; transition: all 0.3s ease-in-out; cursor: pointer;"
-                                onmouseover=" this.style.boxShadow='0 6px 12px rgba(0, 0, 0, 0.3)';"
-                                onmouseout="this.style.boxShadow='0 4px 8px rgba(0, 0, 0, 0.2)';">
-                                Edit
-                            </button>
-                        </form>
-                        <form method="get" action="{{ url_for('product.delete_product', product_id=product.id) }}" class="ml-3">
-                            <button type="submit" class="btn btn-danger" style="padding: 0.6rem 1.8rem; font-size: 1.1rem; font-weight: bold; border-radius: 5px; border: none; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); color: white; transition: all 0.3s ease-in-out; cursor: pointer;"
-                                onmouseover=" this.style.boxShadow='0 6px 12px rgba(0, 0, 0, 0.3)';"
-                                onmouseout="this.style.boxShadow='0 4px 8px rgba(0, 0, 0, 0.2)';">
-                                Delete
-                            </button>
-                        </form>
+                        {% if user.id == product.seller_id %}
+                            <form method="get" action="{{ url_for('product.update_product', product_id=product.id) }}" class="ml-3" style = "margin-right: 10px;">
+                                <button type="submit" class="btn btn-primary" style="padding: 0.6rem 1.8rem; font-size: 1.1rem; font-weight: bold; border-radius: 5px; border: none; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); color: white; transition: all 0.3s ease-in-out; cursor: pointer;"
+                                    onmouseover=" this.style.boxShadow='0 6px 12px rgba(0, 0, 0, 0.3)';"
+                                    onmouseout="this.style.boxShadow='0 4px 8px rgba(0, 0, 0, 0.2)';">
+                                    Edit
+                                </button>
+                            </form>
+                            <form method="get" action="{{ url_for('product.delete_product', product_id=product.id) }}" class="ml-3">
+                                <button type="submit" class="btn btn-danger" style="padding: 0.6rem 1.8rem; font-size: 1.1rem; font-weight: bold; border-radius: 5px; border: none; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); color: white; transition: all 0.3s ease-in-out; cursor: pointer;"
+                                    onmouseover=" this.style.boxShadow='0 6px 12px rgba(0, 0, 0, 0.3)';"
+                                    onmouseout="this.style.boxShadow='0 4px 8px rgba(0, 0, 0, 0.2)';">
+                                    Delete
+                                </button>
+                            </form>
                         {% else  %}
-                        {% if added_to_cart %}
-                        <form method="get" action="{{ url_for('cart.remove_from_cart', product_id=product.id) }}" class="ml-3">
-                            <button type="submit" class="btn btn-danger" style="padding: 0.6rem 1.8rem; font-size: 1.1rem; font-weight: bold; border-radius: 5px; border: none; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); color: white; transition: all 0.3s ease-in-out; cursor: pointer;"
-                                onmouseover=" this.style.boxShadow='0 6px 12px rgba(0, 0, 0, 0.3)';"
-                                onmouseout="this.style.boxShadow='0 4px 8px rgba(0, 0, 0, 0.2)';">
-                                Remove from Cart
-                            </button>
-                        </form>
-                        {% else %}
-                        <form method="get" action="{{ url_for('cart.add_to_cart', product_id=product.id) }}" class="ml-3">
-                            <button type="submit" class="btn btn-success" style="padding: 0.6rem 1.8rem; font-size: 1.1rem; font-weight: bold; border-radius: 5px; background-color: #28a745; border: none; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); color: white; transition: all 0.3s ease-in-out; cursor: pointer;"
-                                onmouseover=" this.style.boxShadow='0 6px 12px rgba(0, 0, 0, 0.3)';"
-                                onmouseout="this.style.boxShadow='0 4px 8px rgba(0, 0, 0, 0.2)';">
-                                Add to Cart
-                            </button>
-                        </form>
-                        {% endif %}
+                            {% if added_to_cart %}
+                            <form method="get" action="{{ url_for('cart.remove_from_cart', product_id=product.id) }}" class="ml-3">
+                                <button type="submit" class="btn btn-danger" style="padding: 0.6rem 1.8rem; font-size: 1.1rem; font-weight: bold; border-radius: 5px; border: none; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); color: white; transition: all 0.3s ease-in-out; cursor: pointer;"
+                                    onmouseover=" this.style.boxShadow='0 6px 12px rgba(0, 0, 0, 0.3)';"
+                                    onmouseout="this.style.boxShadow='0 4px 8px rgba(0, 0, 0, 0.2)';">
+                                    Remove from Cart
+                                </button>
+                            </form>
+                            {% else %}
+                            <form method="get" action="{{ url_for('cart.add_to_cart', product_id=product.id) }}" class="ml-3">
+                                <button type="submit" class="btn btn-success" style="padding: 0.6rem 1.8rem; font-size: 1.1rem; font-weight: bold; border-radius: 5px; background-color: #28a745; border: none; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); color: white; transition: all 0.3s ease-in-out; cursor: pointer;"
+                                    onmouseover=" this.style.boxShadow='0 6px 12px rgba(0, 0, 0, 0.3)';"
+                                    onmouseout="this.style.boxShadow='0 4px 8px rgba(0, 0, 0, 0.2)';">
+                                    Add to Cart
+                                </button>
+                            </form>
+                            {% endif %}
                         {% endif %}                                 
                 </div>
             </td>

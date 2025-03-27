@@ -8,12 +8,11 @@ from flask import (
     flash,
 )
 from app.utils import (
-    get_userinfo_from_session,
     render_error_page,
     save_image,
     load_next_page,
 )
-from flask_login import login_required
+from flask_login import login_required, current_user
 import logging
 
 product_bp = Blueprint("product", __name__)
@@ -29,9 +28,11 @@ def view_product(product_id):
         product = db.get_product_by_id(product_id)
         if not product:
             return render_error_page("Product not found", 404)
-
-        userinfo = get_userinfo_from_session()
-        added_to_cart = db.cart_item_exists(userinfo.user_id, product_id)
+        
+        if current_user.is_authenticated:
+            added_to_cart = db.cart_item_exists(current_user.id, product_id)
+        else:
+            added_to_cart = False
 
         recommended_products = [
             p
@@ -43,7 +44,6 @@ def view_product(product_id):
             product=product,
             recommended_products=recommended_products,
             added_to_cart=added_to_cart,
-            userinfo=userinfo,
         )
     except Exception as e:
         logging.error(e)
@@ -57,7 +57,6 @@ def add_product():
     Allows users to add a new product, with image upload and category selection.
     """
     db = current_app.db
-    userinfo = get_userinfo_from_session()
 
     if request.method == "POST":
         try:
@@ -74,7 +73,7 @@ def add_product():
                 description=description,
                 price=price,
                 category_id=category_id,
-                seller_id=userinfo.user_id,
+                seller_id=current_user.id,
                 image_url=image_url,
             )
             flash("Product added successfully!", "success")
@@ -88,7 +87,6 @@ def add_product():
         return render_template(
             "manage_product.html",
             categories=categories,
-            userinfo=userinfo,
             product=None,
         )
     except Exception as e:
@@ -102,11 +100,10 @@ def update_product(product_id):
     Allows users to update a product. Only the seller can update the product.
     """
     db = current_app.db
-    userinfo = get_userinfo_from_session()
 
     product = db.get_product_by_id(product_id)
 
-    if product.seller_id != userinfo.user_id:
+    if product.seller_id != current_user.id:
         return render_error_page("Unauthorized access", 403)
 
     if request.method == "POST":
@@ -135,7 +132,7 @@ def update_product(product_id):
 
     categories = db.get_all_categories()
     return render_template(
-        "manage_product.html", product=product, categories=categories, userinfo=userinfo
+        "manage_product.html", product=product, categories=categories
     )
 
 
@@ -146,14 +143,13 @@ def delete_product(product_id):
     Deletes a product if the logged-in user is the seller.
     """
     db = current_app.db
-    userinfo = get_userinfo_from_session()
 
     product = db.get_product_by_id(product_id)
 
     if not product:
         return render_error_page("Product not found.", 404)
 
-    if product.seller_id != userinfo.user_id:
+    if product.seller_id != current_user.id:
         return render_error_page("Unauthorized access", 403)
 
     try:
@@ -178,14 +174,12 @@ def search_results():
         page = int(request.args.get("page", 1))
 
         result = db.search_products(search_text, selected_categories, page, per_page=9)
-        userinfo = get_userinfo_from_session()
         categories = db.get_all_categories()
 
         return render_template(
             "search_results.html",
             products=result["products"],
             pagination=result["pagination"],
-            userinfo=userinfo,
             categories=categories,
             search_text=search_text,
             selected_categories=selected_categories,
@@ -203,11 +197,8 @@ def my_products():
     """
     try:
         db = current_app.db
-        userinfo = get_userinfo_from_session()
-        products = db.get_products_by_seller_id(userinfo.user_id)
-        return render_template(
-            "users_products.html", products=products, userinfo=userinfo
-        )
+        products = db.get_products_by_seller_id(current_user.id)
+        return render_template("users_products.html", products=products)
     except Exception as e:
         flash(f"Error loading products", "danger")
         return redirect(url_for("general.home"))

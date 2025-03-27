@@ -1,18 +1,11 @@
-from flask import Flask
+from flask import Flask, session
 from app.models.user import User
 from app.config import get_config
 from .routes import init_routes
 from app.database.db import db, init_db
 from app.database.seed import insert_db_samples
 from app.database.manager import DatabaseManager
-from flask_login import LoginManager
-
-login_manager = LoginManager()
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
+from flask_login import LoginManager, current_user
 
 
 def create_app():
@@ -25,6 +18,19 @@ def create_app():
     init_db(app)
 
     app.db = DatabaseManager()
+
+    login_manager = LoginManager()
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+
+    @app.context_processor
+    def inject_user():
+        return {
+            "user": current_user,
+            "total_cart_items": session.get("total_cart_items", 0),
+        }
 
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"

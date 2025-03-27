@@ -27,7 +27,7 @@
                 </a>
             </div>
             <div class="auth-section">
-                {% if userinfo.user_id %}
+                {% if user.is_authenticated %}
                 <div class="dropdown" style="position: relative;">
                     <!-- Profile Section -->
                     <div style="display: flex; align-items: center; cursor: pointer;" onclick="toggleDropdown()">
@@ -36,7 +36,7 @@
                         <span id="profile-name"
                             onmouseover="this.style.color='#1e8f24'"
                             onmouseout="this.style.color='#27bb30'">
-                            {{ userinfo.username }}
+                            {{ user.username }}
                         </span>
                     </div>
                 
@@ -73,14 +73,6 @@
                         }
                     });
                 </script>
-                
-                
-                <script>
-                    function toggleDropdown() {
-                        var menu = document.getElementById("dropdownMenu");
-                        menu.style.display = menu.style.display === "block" ? "none" : "block";
-                    }
-                </script>
                 {% else %}
                     <a href="{{ url_for('auth.login') }}" class="login-button">Login</a>
                 {% endif %}
@@ -102,11 +94,11 @@
         {% endblock %}
     </main>
 
-    {% if userinfo and userinfo.user_id %}
+    {% if user.is_authenticated %}
         <a href="{{ url_for('cart.cart') }}">
             <div class="floating-cart">
                 <i class="fa fa-shopping-cart"></i>
-                <span class="cart-badge">{{ userinfo.total_cart_items or 0 }}</span>
+                <span class="cart-badge">{{ total_cart_items or 0 }}</span>
             </div>
         </a>
     {% endif %}

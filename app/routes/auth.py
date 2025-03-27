@@ -9,7 +9,7 @@ from flask import (
     current_app,
 )
 from app.utils.helpers import render_error_page, load_next_page
-from flask_login import login_user, logout_user
+from flask_login import login_user, logout_user, login_required
 import logging
 
 auth_bp = Blueprint("auth", __name__)
@@ -71,6 +71,7 @@ def register():
 
 
 @auth_bp.route("/logout")
+@login_required
 def logout():
     """
     Logs out the user and clears session data.
