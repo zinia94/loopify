@@ -47,8 +47,15 @@ def add_to_cart(product_id):
         added_to_cart = db.cart_item_exists(userinfo.user_id, product_id)
         if added_to_cart:
             return redirect(url_for("product.view_product", product_id=product_id))
-        db.add_to_cart(userinfo.user_id, product_id)
-        session["total_cart_items"] = db.get_total_cart_items(userinfo.user_id)
+        
+        product = db.get_product_by_id(product_id)
+        if not product:
+            return render_error_page("Product not found", 404)
+        
+        if product.seller_id != userinfo.user_id :
+            db.add_to_cart(userinfo.user_id, product_id)
+            session["total_cart_items"] = db.get_total_cart_items(userinfo.user_id)
+        
         return redirect(url_for("product.view_product", product_id=product_id))
     except Exception as e:
         return render_error_page(e)

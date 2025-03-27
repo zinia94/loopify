@@ -8,7 +8,7 @@ from flask import (
     flash,
     current_app,
 )
-from app.utils.helpers import render_error_page
+from app.utils.helpers import render_error_page, load_next_page
 from flask_login import login_user, logout_user
 import logging
 
@@ -21,11 +21,6 @@ def login():
     User login page.
     Handles login form submission and redirects to the homepage on success.
     """
-    next_page = request.args.get("next") or request.form.get("next")
-    logging.debug("here zinia")
-    logging.debug(next_page)
-    print("here zinia")
-    print(next_page)
     if request.method == "POST":
         try:
             db = current_app.db
@@ -35,11 +30,7 @@ def login():
             if user:
                 session["total_cart_items"] = db.get_total_cart_items(user.id)
                 login_user(user)
-                if next_page:
-                    logging.debug(next_page)
-                    return redirect(next_page)
-                else:
-                    return redirect(next_page or url_for("general.home"))
+                return load_next_page(request)
             else:
                 flash("Invalid username or password", "danger")
         except Exception as e:

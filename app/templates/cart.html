@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 {% block styles %}
-    <link rel="stylesheet" href="/static/css/cart.css">
+    <link rel="stylesheet" href="/static/css/table.css">
 {% endblock %}
+
 {% block content %}
-<div class="container cart-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
-    <h2 class="cart-title">Your Shopping Cart</h2>
+<div class="container cart-container">
+    <h2 class="page-title">Your Shopping Cart</h2>
 
     {% if userinfo.user_id %}
         {% if cart_items %}
-            <table class="table table-striped cart-table">
+            <table class="table table-striped generic-table">
                 <thead>
                     <tr>
                         <th>Image</th>
                         <th>Product</th>
                         <th>Price</th>
-                        <th>Subtotal</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -22,18 +22,17 @@
                     {% for item in cart_items %}
                     <tr>
                         <td>
-                            <img class="cart-image" src="{{ item.image_url }}" alt="{{ item.title }}">
+                            <img class="generic-image" src="{{ item.image_url }}" alt="{{ item.title }}">
                         </td>
                         <td>
-                            <a href="{{ url_for('product.view_product', product_id=item.product_id) }}" class="cart-item-link">
+                            <a href="{{ url_for('product.view_product', product_id=item.product_id) }}" class="generic-item-link">
                                 {{ item.title }}
                             </a>
                         </td>
-                        <td class="cart-price">${{ item.price }}</td>
-                        <td class="cart-subtotal">${{ item.price }}</td>
+                        <td class="generic-price">€{{ item.price }}</td>
                         <td>
                             <form action="{{ url_for('cart.remove_from_cart', product_id=item.product_id) }}" method="POST">
-                                <button type="submit" class="btn btn-danger btn-sm"><i class="fa fa-trash-o" aria-hidden="true" style="font-size: 15px;"></i> Remove</button>
+                                <button type="submit" class="btn btn-danger btn-sm"><i class="fa fa-trash-o" aria-hidden="true"></i> Remove</button>
                             </form>
                         </td>
                     </tr>
@@ -51,10 +50,10 @@
             </div>
 
         {% else %}
-            <p class="empty-cart-message">Your cart is empty. <a href="{{ url_for('product.search_results') }}" class="start-shopping-link">Start shopping</a>!</p>
+            <p class="no-products-message">Your cart is empty. <a href="{{ url_for('product.search_results') }}" class="start-shopping-link">Start shopping</a>!</p>
         {% endif %}
     {% else %}
-        <p class="empty-cart-message">You need to <a href="{{ url_for('auth.login', next = '/cart') }}" class="login-link">log in</a> first to view your cart.</p>
+        <p class="no-products-message">You need to <a href="{{ url_for('auth.login', next='/cart') }}" class="login-link">log in</a> first to view your cart.</p>
     {% endif %}
 </div>
 {% endblock %}

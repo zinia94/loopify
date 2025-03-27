@@ -1,6 +1,6 @@
 import os
 import secrets
-from flask import session, render_template, current_app
+from flask import session, render_template, current_app, redirect, url_for, flash
 from app.models.userinfo import UserInfo
 from flask_login import current_user
 
@@ -18,7 +18,7 @@ def get_userinfo_from_session():
 def render_error_page(error_message, errorcode=500):
     session.clear()
     userinfo = get_userinfo_from_session()
-    if errorcode is 500:
+    if errorcode == 500:
         return (
             render_template("500.html", error_message=error_message, userinfo=userinfo),
             errorcode,
@@ -27,6 +27,13 @@ def render_error_page(error_message, errorcode=500):
         render_template("error.html", error_message=error_message, userinfo=userinfo),
         errorcode,
     )
+
+def load_next_page(request):
+    next_page = request.args.get("next") or request.form.get("next")
+    if next_page:
+        return redirect(next_page)
+    else:
+        return redirect(url_for("general.home"))
 
 
 def save_image(image):

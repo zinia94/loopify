@@ -7,7 +7,7 @@ from flask import (
     redirect,
     flash,
 )
-from app.utils import get_userinfo_from_session, render_error_page, save_image
+from app.utils import get_userinfo_from_session, render_error_page, save_image, load_next_page
 from flask_login import login_required
 import logging
 
@@ -72,6 +72,7 @@ def add_product():
                 seller_id=userinfo.user_id,
                 image_url=image_url,
             )
+            flash("Product added successfully!", "success")
             return redirect(url_for("product.view_product", product_id=product.id))
         except Exception as e:
             logging.error(e)
@@ -121,7 +122,7 @@ def update_product(product_id):
                 category_id=category_id,
                 image_url=image_url,
             )
-
+            flash("Product updated successfully!", "success")
             return redirect(url_for("product.view_product", product_id=product.id))
         except Exception as e:
             logging.error(e)
@@ -153,9 +154,7 @@ def delete_product(product_id):
     try:
         db.delete_product(product_id)
         flash("Product deleted successfully.", "success")
-        return redirect(
-            url_for("general.home")
-        )  # Redirect to home or product listing page
+        return load_next_page(request)
     except Exception as e:
         logging.error(f"Error deleting product: {e}")
         return render_error_page("There was an error deleting the product.")
@@ -199,8 +198,9 @@ def my_products():
     """
     try:
         db = current_app.db
-        products = db.get_products_by_seller_id(current_user.id)
-        return render_template("my_products.html", products=products)
+        userinfo = get_userinfo_from_session()
+        products = db.get_products_by_seller_id(userinfo.user_id)
+        return render_template("users_products.html", products=products, userinfo = userinfo)
     except Exception as e:
-        flash(f"Error loading products: {e}", "danger")
+        flash(f"Error loading products", "danger")
         return redirect(url_for("general.home"))

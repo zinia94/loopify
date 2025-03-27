@@ -81,23 +81,31 @@ class DatabaseManager:
             return None
 
     def delete_product(self, product_id):
-        from app.models import Product
-
-        # Retrieve the product by its ID
-        product = Product.query.get(product_id)
-
-        if product:
-            db.session.delete(product)
-            db.session.commit()
-            return True
-        else:
+        from app.models import Product, Cart
+        try:
+            product = Product.query.get(product_id)
+            if product:
+                Cart.query.filter_by(product_id=product_id).delete()
+                db.session.delete(product)
+                db.session.commit()
+                return True
             return False
+        except Exception as e:
+            db.session.rollback()  # Rollback in case of an error
+            raise e
 
     def get_product_by_id(self, product_id):
         """Get product by ID."""
         from app.models import Product
 
         return Product.query.get(product_id)
+    
+    def get_products_by_seller_id(self, seller_id):
+        """
+        Get all products by a specific seller ID.
+        """
+        from app.models import Product
+        return Product.query.filter_by(seller_id=seller_id).all()
 
     def get_all_categories(self):
         """Get all categories."""
